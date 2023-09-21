@@ -1,5 +1,6 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 import xlsxwriter
 import os
 
@@ -31,7 +32,9 @@ def new_line_remover(question):
 def setup():
     global single_case
     global single_incident
-    driver = webdriver.Chrome(ChromeDriverManager().install())
+    service = Service()
+    options = webdriver.ChromeOptions()
+    driver = webdriver.Chrome(service=service, options=options)
 
     # Go to Website.
     driver.get('https://www2.tceq.texas.gov/oce/eer/index.cfm')
@@ -40,23 +43,23 @@ def setup():
     print('Enter Incident Number:')
     single_search = input()
     if len(single_search) > 0:
-        incident_number = driver.find_element_by_name('incid_track_num')
+        incident_number = driver.find_element(By.NAME, 'incid_track_num')
         incident_number.send_keys(single_search)
         single_case = True
         single_incident = [single_search]
     else:
         single_case = False
-        event_start_beg = driver.find_element_by_name('event_start_beg_dt')
-        event_start_end = driver.find_element_by_name('event_start_end_dt')
-        event_end_beg = driver.find_element_by_name('event_end_beg_dt')
-        event_end_end = driver.find_element_by_name('event_end_end_dt')
-        cn = driver.find_element_by_name('cn_txt')
-        customer_name = driver.find_element_by_name('cust_name')
-        rn = driver.find_element_by_name('rn_txt')
-        regulated_entity_name = driver.find_element_by_name('re_name')
-        county = driver.find_element_by_name('ls_cnty_name')
-        region = driver.find_element_by_name('ls_region_cd')
-        event_type = driver.find_element_by_name('ls_event_typ_cd')
+        event_start_beg = driver.find_element(By.NAME, 'event_start_beg_dt')
+        event_start_end = driver.find_element(By.NAME, 'event_start_end_dt')
+        event_end_beg = driver.find_element(By.NAME, 'event_end_beg_dt')
+        event_end_end = driver.find_element(By.NAME, 'event_end_end_dt')
+        cn = driver.find_element(By.NAME,  'cn_txt')
+        customer_name = driver.find_element(By.NAME, 'cust_name')
+        rn = driver.find_element(By.NAME, 'rn_txt')
+        regulated_entity_name = driver.find_element(By.NAME, 're_name')
+        county = driver.find_element(By.NAME, 'ls_cnty_name')
+        region = driver.find_element(By.NAME, 'ls_region_cd')
+        event_type = driver.find_element(By.NAME, 'ls_event_typ_cd')
 
         #Best Test Date 2/14/2021
         print('Enter Beginning Start Date Range (##/##/####):')
@@ -94,7 +97,7 @@ def setup():
         event_type.send_keys(event_type_input)
 
     # Click submit
-    search = driver.find_element_by_name('_fuseaction=main.searchresults')
+    search = driver.find_element(By.NAME, '_fuseaction=main.searchresults')
     search.click()
     print('Processing Now...')
 
@@ -107,16 +110,16 @@ def collecting_information(driver):
     case_numbers = []
     repeat = True
     while repeat:
-        link = driver.find_elements_by_class_name('datadisplay')
+        link = driver.find_elements(By.CLASS_NAME, 'datadisplay')
         for lines in link:
-            case = lines.find_elements_by_tag_name('a')
+            case = lines.find_elements(By.TAG_NAME, 'a')
             for sublinks in case:
                 if number_finder(sublinks.__getattribute__('text')):
                     cases.append(sublinks.get_attribute('href'))
                     case_numbers.append(sublinks.__getattribute__('text'))
 
-        navigation = driver.find_element_by_class_name('pagingnav')
-        navigation = navigation.find_elements_by_css_selector('a')
+        navigation = driver.find_element(By.CLASS_NAME, 'pagingnav')
+        navigation = navigation.find_elements(By.CSS_SELECTOR, 'a')
 
         next_impossible = True
         for pages in navigation:
@@ -337,7 +340,7 @@ def extracting_information(driver, cases):
     sheet2 = book.add_worksheet('Incident Sums')
     global case_tracker
     case_tracker = 2
-    download = driver.find_element_by_id('dwnldlink')
+    download = driver.find_element(By.ID, 'dwnldlink')
     download.click()
     # sheet.set_column(0, 1, 100)
     sheet.write(0, 0, 'INCIDENT NO.')
@@ -391,11 +394,11 @@ def extracting_information(driver, cases):
             # Go to files
             driver.get(j)
             # Yellow Boxes
-            questions = driver.find_elements_by_tag_name('th')
+            questions = driver.find_elements(By.TAG_NAME, 'th')
             # White Boxes
-            answers = driver.find_elements_by_tag_name('td')
+            answers = driver.find_elements(By.TAG_NAME, 'td')
             # Seperated by forms
-            order = driver.find_elements_by_class_name('aeme')
+            order = driver.find_elements(By.CLASS_NAME, 'aeme')
 
             contaminants(questions, answers, order, sheet, sheet2, j)
     else:
@@ -403,11 +406,11 @@ def extracting_information(driver, cases):
         j = driver.current_url
 
         # Yellow Boxes
-        questions = driver.find_elements_by_tag_name('th')
+        questions = driver.find_elements(By.TAG_NAME, 'th')
         # White Boxes
-        answers = driver.find_elements_by_tag_name('td')
+        answers = driver.find_elements(By.TAG_NAME, 'td')
         # Seperated by forms
-        order = driver.find_elements_by_class_name('aeme')
+        order = driver.find_elements(By.CLASS_NAME, 'aeme')
 
         contaminants(questions, answers, order, sheet, sheet2, j)
     book.close()
