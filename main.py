@@ -117,19 +117,20 @@ def collecting_information(driver):
                 if number_finder(sublinks.__getattribute__('text')):
                     cases.append(sublinks.get_attribute('href'))
                     case_numbers.append(sublinks.__getattribute__('text'))
-
         navigation = driver.find_element(By.CLASS_NAME, 'pagingnav')
         navigation = navigation.find_elements(By.CSS_SELECTOR, 'a')
 
         next_impossible = True
         for pages in navigation:
+            #print(pages.get_attribute('text'))
             if pages.get_attribute('text') == '>':
-                driver.get(pages.get_attribute('href'))
+                next_button = pages
                 next_impossible = False
 
+        if not next_impossible:
+            driver.get(next_button.get_attribute('href'))
         if next_impossible:
             repeat = False
-
     return cases
 
 
